@@ -1,0 +1,19 @@
+[
+  {
+    "file": "src/chip8.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-std=c99",
+      "-Iinclude",
+      "-g",
+      "-c",
+      "src/chip8.c",
+      "-o",
+      "obj/chip8.o"
+    ],
+    "directory": "/home/yarikcompany/Other/Programs/С/CEmulator",
+    "output": "obj/chip8.o"
+  }
+]
