@@ -68,6 +68,11 @@ void chip8_op_00e0(Chip8* chip8) {
     memset(chip8->video, 0, sizeof(chip8->video));
 }
 
+void chip8_op_00ee(Chip8* chip8) {
+    --chip8->sp;
+    chip8->pc = chip8->stack[chip8->sp];
+}
+
 void chip8_print_memory_table(const Chip8* chip8) {
     printf("--- memory of the chip8 ---\n");
     
