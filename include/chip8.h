@@ -23,8 +23,8 @@ typedef struct {
     u16 pc;
     u16 stack[STACK_SIZE];
     u8 sp;
-    u8 delayTimer;
-    u8 soundTimer;
+    u8 delay_timer;
+    u8 sound_timer;
     u8 keypad[KEYPAD_AMOUNT];
     u32 video[VIDEO_WIDTH * VIDEO_HEIGHT];
     u16 opcode;
@@ -70,7 +70,5 @@ void chip8_op_fx55(Chip8* chip8); // LD [I] Vx: Store registers V0 through Vx in
 void chip8_op_fx65(Chip8* chip8); // LD Vx, [I]: Read registers V0 through Vx form memory starting at location I
 
 void chip8_print_memory_table(const Chip8* chip8);
-
-
 
 #endif // CHIP8_H
