@@ -19,6 +19,6 @@ typedef double f64;
 typedef enum {
     CEMULATOR_FALSE,
     CEMULATOR_TRUE
-} CEMULATOR_BOOL;
+} CEmulatorBool;
 
 #endif // DEFINES_H

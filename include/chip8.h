@@ -28,12 +28,26 @@ typedef struct {
     u8 keypad[KEYPAD_AMOUNT];
     u32 video[VIDEO_WIDTH * VIDEO_HEIGHT];
     u16 opcode;
+
+    void* table[0xF + 1];
+    void* table_0[0xE + 1];
+    void* table_8[0xE + 1];
+    void* table_e[0xE + 1];
+    void* table_f[0x65 + 1];
 } Chip8;
 
 Chip8 chip8_init();
-CEMULATOR_BOOL chip8_load_rom(Chip8* chip8, char const* filename);
+void chip8_cycle(Chip8* chip8); 
+CEmulatorBool chip8_rom_load(Chip8* chip8, char const* filename);
+void chip8_init_func_table(Chip8* chip8);
+
+void chip8_func_table_0(Chip8* chip);
+void chip8_func_table_8(Chip8* chip);
+void chip8_func_table_e(Chip8* chip);
+void chip8_func_table_f(Chip8* chip);
 
 // Instructions
+void chip8_op_null();
 void chip8_op_00e0(Chip8* chip8); // CLS: Clear the display
 void chip8_op_00ee(Chip8* chip8); // RET: Return from a subroutine
 void chip8_op_1nnn(Chip8* chip8); // JP addr: Jump to location nnn

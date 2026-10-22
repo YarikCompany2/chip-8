@@ -38,15 +38,33 @@ Chip8 chip8_init() {
 
     srand(time(0));
 
+    chip8_init_func_table(&chip8);
+    
     return chip8;
 }
 
-// Generate byte from 0 to 255
-u8 get_rand_byte() {
-    return (u8)rand() % (255u + 1u); 
+void chip8_cycle(Chip8* chip8) {
+    chip8->opcode = chip8->memory[chip8->pc] << 8u | chip8->memory[chip8->pc + 1]; 
+
+    chip8->pc += 2;
+
+    u16 table_index = (chip8->opcode & 0xF000u) >> 12u;
+    
+    ((void(*)())chip8->table[table_index])();
+
+    if (chip8->delay_timer > 0)
+        chip8->delay_timer--;
+    
+    if (chip8->sound_timer > 0)
+        chip8->sound_timer--;
 }
 
-CEMULATOR_BOOL chip8_load_rom(Chip8* chip8, char const* filename) {
+// Generate byte from 0 (0x00) to 255 (0xFF)
+u8 chip8_rand_byte_get() {
+    return (u8)rand() % (0xFFu + 0x01u); 
+}
+
+CEmulatorBool chip8_rom_load(Chip8* chip8, char const* filename) {
     FILE* file = fopen(filename, "rb");
 
     if (!file) {
@@ -72,6 +90,79 @@ CEMULATOR_BOOL chip8_load_rom(Chip8* chip8, char const* filename) {
     free(buffer);
     return CEMULATOR_TRUE;
 }
+
+void chip8_init_func_table(Chip8* chip8) {
+    chip8->table[0x0] = &chip8_func_table_0;
+    chip8->table[0x1] = &chip8_op_1nnn;
+    chip8->table[0x2] = &chip8_op_2nnn;
+    chip8->table[0x3] = &chip8_op_3xkk;
+    chip8->table[0x4] = &chip8_op_4xkk;
+    chip8->table[0x5] = &chip8_op_5xy0;
+    chip8->table[0x6] = &chip8_op_6xkk;
+    chip8->table[0x7] = &chip8_op_7xkk;
+    chip8->table[0x8] = &chip8_func_table_8;
+    chip8->table[0x9] = &chip8_op_9xy0;
+    chip8->table[0xA] = &chip8_op_annn;
+    chip8->table[0xB] = &chip8_op_bnnn;
+    chip8->table[0xC] = &chip8_op_cxkk;
+    chip8->table[0xD] = &chip8_op_dxyn;
+    chip8->table[0xE] = &chip8_func_table_e;
+    chip8->table[0xF] = &chip8_func_table_f;
+
+    for (u8 i = 0; i <= 0xE; i++) {
+        chip8->table_0[i] = &chip8_op_null;
+        chip8->table_8[i] = &chip8_op_null;
+        chip8->table_e[i] = &chip8_op_null;
+    }
+
+    chip8->table_0[0x0] = &chip8_op_00e0;
+    chip8->table_0[0xE] = &chip8_op_00ee;
+
+    chip8->table_8[0x0] = &chip8_op_8xy0;
+    chip8->table_8[0x1] = &chip8_op_8xy1;
+    chip8->table_8[0x2] = &chip8_op_8xy2;
+    chip8->table_8[0x3] = &chip8_op_8xy3;
+    chip8->table_8[0x4] = &chip8_op_8xy4;
+    chip8->table_8[0x5] = &chip8_op_8xy5;
+    chip8->table_8[0x6] = &chip8_op_8xy6;
+    chip8->table_8[0x7] = &chip8_op_8xy7;
+    chip8->table_8[0xE] = &chip8_op_8xye;
+
+    chip8->table_e[0x1] = &chip8_op_exa1;
+    chip8->table_e[0xE] = &chip8_op_ex9e;
+
+    for (u8 i = 0; i <= 0x65; i++) {
+        chip8->table_f[i] = &chip8_op_null;
+    }
+
+    chip8->table_f[0x07] = &chip8_op_fx07;
+    chip8->table_f[0x0A] = &chip8_op_fx0a;
+    chip8->table_f[0x15] = &chip8_op_fx15;
+    chip8->table_f[0x18] = &chip8_op_fx18;
+    chip8->table_f[0x1E] = &chip8_op_fx1e;
+    chip8->table_f[0x29] = &chip8_op_fx29;
+    chip8->table_f[0x33] = &chip8_op_fx33;
+    chip8->table_f[0x55] = &chip8_op_fx55;
+    chip8->table_f[0x65] = &chip8_op_fx65;
+}
+
+void chip8_func_table_0(Chip8* chip8)  {
+   ((void(*)(Chip8* chip8))chip8->table_0[chip8->opcode & 0x000Fu])(chip8);
+}
+
+void chip8_func_table_8(Chip8* chip8) {
+    ((void(*)(Chip8* chip8))chip8->table_8[chip8->opcode & 0x000Fu])(chip8);
+}
+
+void chip8_func_table_e(Chip8* chip8) {
+    ((void(*)(Chip8* chip8))chip8->table_e[chip8->opcode & 0x000Fu])(chip8);
+}
+
+void chip8_func_table_f(Chip8* chip8) {
+    ((void(*)(Chip8* chip8))chip8->table_f[chip8->opcode & 0x00FFu])(chip8);
+}
+
+void chip8_op_null() {}
 
 void chip8_op_00e0(Chip8* chip8) {
     memset(chip8->video, 0, sizeof(chip8->video));
@@ -241,7 +332,7 @@ void chip8_op_cxkk(Chip8* chip8) {
     u8 vx = (chip8->opcode & 0x0F00u) >> 8u;
 
     u8 byte = chip8->opcode & 0x00FFu;
-    u8 rand_byte = get_rand_byte();
+    u8 rand_byte = chip8_rand_byte_get();
     
     chip8->registers[vx] = rand_byte & byte;
 }
@@ -326,11 +417,48 @@ void chip8_op_fx1e(Chip8* chip8) {
     chip8->index += chip8->registers[vx];
 }
 
+void chip8_op_fx29(Chip8* chip8) {
+    u8 vx = (chip8->opcode & 0x0F00u) >> 8u;
+    u8 digit = chip8->registers[vx];
+
+    chip8->index = FONTSET_START_ADDRESS + (5 * digit);
+}
+
+void chip8_op_fx33(Chip8* chip8) {
+    u8 vx = (chip8->opcode & 0x0F00u) >> 8u;
+    u8 value = chip8->registers[vx];
+
+    chip8->memory[chip8->index + 2] = value % 10;
+    value /= 10;
+
+    chip8->memory[chip8->index + 1] = value % 10;
+    value /= 10;
+
+    chip8->memory[chip8->index] = value % 10;
+}
+
+
+void chip8_op_fx55(Chip8* chip8) {
+    u8 vx = (chip8->opcode & 0x0F00u) >> 8u;
+
+    for (u8 i = 0; i <= vx; i++) {
+        chip8->memory[chip8->index + i] = chip8->registers[i];
+    }
+}
+
+void chip8_op_fx65(Chip8* chip8) {
+    u8 vx = (chip8->opcode & 0x0F00u) >> 8u;
+
+    for (u8 i = 0; i <= vx; i++) {
+        chip8->registers[i] = chip8->memory[chip8->index + i];
+    }
+}
+
 void chip8_print_memory_table(const Chip8* chip8) {
     printf("--- memory of the chip8 ---\n");
     
     for (i64 i = 0; i < MEMORY_SIZE; i++) {
-        printf("%4d", chip8->memory[i]);
+        printf("%4.2x", chip8->memory[i]);
         if ((i + 1) % 20 == 0) {
             printf("\n");
         }
