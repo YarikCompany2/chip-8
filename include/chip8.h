@@ -9,16 +9,25 @@
 #define VIDEO_HEIGHT 32
 
 #define START_ADDRESS 0x200
+#define END_ADDRESS 0xFFF
 
 #define FONTSET_SIZE 80
 #define FONTSET_START_ADDRESS 0x50
 
 #include <stdint.h>
+
 #include "defines.h"
+
+typedef enum {
+    CHIP8_NORMAL_MODE,
+    CHIP8_PRINT_INSTRUCTIONS_MODE,
+    CHIP8_DEBUG_MODE
+} Chip8Mode;
 
 typedef struct {
     u8 registers[REGISTERS_SIZE];
     u8 memory[MEMORY_SIZE];
+    u32 rom_size;
     u16 index;
     u16 pc;
     u16 stack[STACK_SIZE];
@@ -29,6 +38,9 @@ typedef struct {
     u32 video[VIDEO_WIDTH * VIDEO_HEIGHT];
     u16 opcode;
 
+    Chip8Mode mode;
+
+    // Tables of function pointers
     void* table[0xF + 1];
     void* table_0[0xE + 1];
     void* table_8[0xE + 1];
@@ -37,10 +49,12 @@ typedef struct {
 } Chip8;
 
 Chip8 chip8_init();
-void chip8_cycle(Chip8* chip8); 
-CEmulatorBool chip8_rom_load(Chip8* chip8, char const* filename);
 void chip8_init_func_table(Chip8* chip8);
+CEmulatorBool chip8_rom_load(Chip8* chip8, char const* filename);
 
+void chip8_cycle(Chip8* chip8); 
+
+// Function tables
 void chip8_func_table_0(Chip8* chip);
 void chip8_func_table_8(Chip8* chip);
 void chip8_func_table_e(Chip8* chip);
@@ -82,7 +96,5 @@ void chip8_op_fx29(Chip8* chip8); // LD F, Vx: Set I = location of sprite for di
 void chip8_op_fx33(Chip8* chip8); // LD B, Vx: Store BCD representation of Vx in memory locations I, I+1, and I+2
 void chip8_op_fx55(Chip8* chip8); // LD [I] Vx: Store registers V0 through Vx in memory starting at location I
 void chip8_op_fx65(Chip8* chip8); // LD Vx, [I]: Read registers V0 through Vx form memory starting at location I
-
-void chip8_print_memory_table(const Chip8* chip8);
 
 #endif // CHIP8_H

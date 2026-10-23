@@ -1,24 +1,53 @@
 #include "chip8.h"
 #include "platform.h"
+#include "tool.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 int main(int argc, char* argv[]) {
-    if (argc != 4) {
+    ToolType tool_type = TOOL_UNSPECIFIED;
+    i32 filename_index = 3;
+
+    if (argc == 3) {
+        if (strcmp(argv[1], "-t") == 0)
+            tool_type = TOOL_PRINT_MEMORY_TABLE;
+        else if (strcmp(argv[1], "-i") == 0)
+            tool_type = TOOL_PRINT_INSTRUCTION_SET;
+        else {
+            printf("Uknown flag is presented. If you want to use program with the flage, use: %s <tool> <game_path>\n", argv[0]);
+            printf("Otherwise, if you want to launch emulator to play, use: %s <scale> <delay> <game_path>\n", argv[0]);
+            return 1;
+        }
+
+        filename_index = 2;
+    } else if (argc != 4) {
         printf("To use this program, write: %s <scale> <delay> <game_path>\n", argv[0]);
         return 1;
     }
 
-    u32 video_scale = atoi(argv[1]);
-    u32 cycle_delay = atoi(argv[2]);
-    char const* rom_filename = argv[3];
-
-    Platform platform = platform_init("CEmulator", VIDEO_WIDTH * video_scale, VIDEO_HEIGHT * video_scale, VIDEO_WIDTH, VIDEO_HEIGHT);
+    char const* rom_filename = argv[filename_index];
 
     Chip8 chip8 = chip8_init();
-    chip8_rom_load(&chip8, rom_filename);
+    if (!chip8_rom_load(&chip8, rom_filename)) return 1;
+
+    switch (tool_type) {
+        case TOOL_PRINT_MEMORY_TABLE:
+            tool_chip8_memory_table_print(&chip8);
+            return 0;
+        case TOOL_PRINT_INSTRUCTION_SET:
+            tool_instruction_set_print(&chip8);
+            return 0;
+        default:
+            break;
+    }
+
+    u32 video_scale = atoi(argv[1]);
+    u32 cycle_delay = atoi(argv[2]);
+
+    Platform platform = platform_init("CEmulator", VIDEO_WIDTH * video_scale, VIDEO_HEIGHT * video_scale, VIDEO_WIDTH, VIDEO_HEIGHT);
 
     i32 video_pitch = sizeof(chip8.video[0]) * VIDEO_WIDTH;
 
@@ -39,7 +68,6 @@ int main(int argc, char* argv[]) {
     }
 
     platform_destroy(&platform);
-    // chip8_print_memory_table(&chip8);
 
     return 0;
 }
