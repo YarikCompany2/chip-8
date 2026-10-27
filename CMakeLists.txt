@@ -15,6 +15,7 @@ add_executable(${PROJECT_NAME}
     include/defines.h
     include/platform.h
 
+    src/tool.c
     src/platform.c
     src/chip8.c
     src/main.c
