@@ -14,6 +14,7 @@ typedef enum {
 
 void tool_chip8_memory_table_print(const Chip8* chip8);
 
-void tool_instruction_set_print(Chip8* chip8);
+void tool_instruction_desc_get(u16 instruction, char *instruction_desc);
+void tool_instruction_set_print(Chip8* chip8, u32 rom_size);
 
 #endif // TOOL_H

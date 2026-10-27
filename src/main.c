@@ -1,6 +1,7 @@
 #include "chip8.h"
 #include "platform.h"
 #include "tool.h"
+#include "defines.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,14 +32,17 @@ int main(int argc, char* argv[]) {
     char const* rom_filename = argv[filename_index];
 
     Chip8 chip8 = chip8_init();
-    if (!chip8_rom_load(&chip8, rom_filename)) return 1;
+    chip8_rom_load(&chip8, rom_filename);
+
+    u32 rom_size = 0;
 
     switch (tool_type) {
         case TOOL_PRINT_MEMORY_TABLE:
             tool_chip8_memory_table_print(&chip8);
             return 0;
         case TOOL_PRINT_INSTRUCTION_SET:
-            tool_instruction_set_print(&chip8);
+            rom_size = chip8_rom_size_get(rom_filename);
+            tool_instruction_set_print(&chip8, rom_size);
             return 0;
         default:
             break;

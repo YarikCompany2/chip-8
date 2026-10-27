@@ -18,16 +18,9 @@
 
 #include "defines.h"
 
-typedef enum {
-    CHIP8_NORMAL_MODE,
-    CHIP8_PRINT_INSTRUCTIONS_MODE,
-    CHIP8_DEBUG_MODE
-} Chip8Mode;
-
 typedef struct {
     u8 registers[REGISTERS_SIZE];
     u8 memory[MEMORY_SIZE];
-    u32 rom_size;
     u16 index;
     u16 pc;
     u16 stack[STACK_SIZE];
@@ -37,8 +30,6 @@ typedef struct {
     u8 keypad[KEYPAD_AMOUNT];
     u32 video[VIDEO_WIDTH * VIDEO_HEIGHT];
     u16 opcode;
-
-    Chip8Mode mode;
 
     // Tables of function pointers
     void* table[0xF + 1];
@@ -50,7 +41,8 @@ typedef struct {
 
 Chip8 chip8_init();
 void chip8_init_func_table(Chip8* chip8);
-CEmulatorBool chip8_rom_load(Chip8* chip8, char const* filename);
+void chip8_rom_load(Chip8* chip8, char const* filename);
+u32 chip8_rom_size_get(char const* filename);
 
 void chip8_cycle(Chip8* chip8); 
 
