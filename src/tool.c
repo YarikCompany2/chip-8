@@ -2,6 +2,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
+#include "utils.h"
 
 void tool_chip8_memory_table_print(const Chip8* chip8) {
     printf("--- memory of the chip8 ---\n");
@@ -160,7 +163,7 @@ void tool_instruction_desc_get(u16 instruction, char *instruction_desc) {
     }
 }
 
-void tool_instruction_set_print(Chip8 *chip8, u32 rom_size) {
+void tool_instruction_print(Chip8 *chip8, u32 rom_size) {
     char instruction_desc[200];
     u16 opcode = 0x0;
 
@@ -169,5 +172,97 @@ void tool_instruction_set_print(Chip8 *chip8, u32 rom_size) {
 
         tool_instruction_desc_get(opcode, instruction_desc);
         printf("$%.4X -> %s\n", i, instruction_desc);
+    }
+}
+
+void tool_registers_print(Chip8 *chip8) {
+    for (u8 i = 0; i < REGISTERS_SIZE; i++) {
+        printf(" r[%.1x]", i);
+    }
+    printf("\n");
+
+    for (u8 i = 0; i < REGISTERS_SIZE; i++) {
+        printf("%5.2x", chip8->registers[i]);
+    }
+    printf("\n\n");
+}
+
+void tool_instruction_next(Chip8 *chip8, int amount) {
+    if (!amount) {
+        amount = 1;
+    }
+
+    for (int i = 0; i < amount; i++) {
+        char instruction_desc[200];
+        u16 current_address = chip8->pc;
+        
+        chip8_cycle(chip8);
+
+        tool_instruction_desc_get(chip8->opcode, instruction_desc);
+        printf("$%.3X -> %s\n", current_address, instruction_desc);
+    }   
+}
+
+void tool_index_register_print(Chip8 *chip8) {
+    printf("Index register: $%.3x\n", chip8->index);
+}
+
+void tool_stack_print(Chip8 *chip8) {
+    for (u32 i = 0; i < STACK_SIZE; i++) {
+        printf("| $%3.3X |", chip8->stack[i]);
+
+        if (chip8->sp == i)
+            printf(" <--- SP");
+
+        printf("\n");
+    }
+
+
+    printf("--------\n\n");
+}
+
+void tool_display_print(Chip8 *chip8) {
+    for (u32 i = 0; i < VIDEO_HEIGHT; i++) {
+        for (u32 j = 0; j < VIDEO_WIDTH; j++) {
+            // if (chip8->video[i + j])
+            //     printf("f");
+            // else
+            //     printf("0");
+
+            printf("%u ", chip8->video[i + j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+void tool_debug(Chip8 *chip8) {
+    char command[100];
+    char amount[20];
+    
+    for (;;) {
+        char c;
+        u32 index = 0;
+
+        scanf("%s", command);
+
+        while ((c = getchar()) != '\n') {
+            if ('0' <= c && c <= '9')
+                amount[index++] = c;
+        }
+        amount[index] = '\0';
+
+        if (strcmp(command, "next") == 0)
+            tool_instruction_next(chip8, atoi(amount));
+        else if (strcmp(command, "reg") == 0)
+            tool_registers_print(chip8);
+        else if (strcmp(command, "index") == 0)
+            tool_index_register_print(chip8);
+        else if (strcmp(command, "stack") == 0)
+            tool_stack_print(chip8);
+        else if (strcmp(command, "display") == 0)
+            tool_display_print(chip8);
+        else if (strcmp(command, "quit") == 0)
+            break;
     }
 }

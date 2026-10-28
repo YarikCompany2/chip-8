@@ -14,10 +14,12 @@ add_executable(${PROJECT_NAME}
     include/chip8.h
     include/defines.h
     include/platform.h
+    include/utils.h
 
     src/tool.c
     src/platform.c
     src/chip8.c
+    src/utils.c
     src/main.c
 )
 

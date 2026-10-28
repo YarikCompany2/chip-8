@@ -17,6 +17,8 @@ int main(int argc, char* argv[]) {
             tool_type = TOOL_PRINT_MEMORY_TABLE;
         else if (strcmp(argv[1], "-i") == 0)
             tool_type = TOOL_PRINT_INSTRUCTION_SET;
+        else if (strcmp(argv[1], "-d") == 0)
+            tool_type = TOOL_DEBUG;
         else {
             printf("Uknown flag is presented. If you want to use program with the flage, use: %s <tool> <game_path>\n", argv[0]);
             printf("Otherwise, if you want to launch emulator to play, use: %s <scale> <delay> <game_path>\n", argv[0]);
@@ -42,7 +44,10 @@ int main(int argc, char* argv[]) {
             return 0;
         case TOOL_PRINT_INSTRUCTION_SET:
             rom_size = chip8_rom_size_get(rom_filename);
-            tool_instruction_set_print(&chip8, rom_size);
+            tool_instruction_print(&chip8, rom_size);
+            return 0;
+        case TOOL_DEBUG:
+            tool_debug(&chip8);
             return 0;
         default:
             break;
